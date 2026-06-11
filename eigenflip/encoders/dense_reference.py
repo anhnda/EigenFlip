@@ -45,27 +45,38 @@ def _sequential_condition(Wf, scale, zp, lo, hi, Hmat, order, work_dtype):
     dev = Wf.device
     C, pin = Wf.shape
     Hmat = Hmat.to(work_dtype)
-    W = Wf.clone()
-    codes = torch.empty(C, pin, device=dev, dtype=torch.long)
     order = list(order)
 
-    for step, i in enumerate(order):
-        R = order[step:]
-        si = scale[:, i]; zpi = zp[:, i]
-        q = torch.clamp(torch.round(W[:, i] / si + zpi), lo, hi)
+    # STANDARD GPTQ: permute (H, W, scale, zp) into processing order, invert H
+    # ONCE, then schur-downdate the inverse by rank-1 each step -- O(d^3) total,
+    # not O(d^4). Bitwise-identical to the per-step inv(H_RR) form (verified).
+    p = torch.tensor(order, device=dev)
+    Hp = Hmat.index_select(0, p).index_select(1, p)        # [pin, pin]
+    Wp = Wf.index_select(1, p).clone()                     # [C, pin]
+    sc_p = scale.index_select(1, p)                        # [C, pin]
+    zp_p = zp.index_select(1, p)
+    Hinv = torch.linalg.inv(Hp)
+    codes_p = torch.empty(C, pin, device=dev, dtype=torch.long)
+
+    for i in range(pin):
+        si = sc_p[:, i]; zpi = zp_p[:, i]
+        q = torch.clamp(torch.round(Wp[:, i] / si + zpi), lo, hi)
         w_dq = (q - zpi) * si
-        e = W[:, i] - w_dq          # GPTQ sign: target - dequant
-        codes[:, i] = q.long()
-        Rrest = R[1:]
-        if not Rrest:
-            continue
-        Ridx = torch.tensor(R, device=dev)
-        HRR = Hmat.index_select(0, Ridx).index_select(1, Ridx)
-        HRRinv = torch.linalg.inv(HRR)
-        factor = (HRRinv[1:, 0] / HRRinv[0, 0]).to(work_dtype)
-        rrest_idx = torch.tensor(Rrest, device=dev)
-        W[:, rrest_idx] -= e.unsqueeze(1) * factor.unsqueeze(0)
-        del HRR, HRRinv
+        e = Wp[:, i] - w_dq          # GPTQ sign: target - dequant
+        codes_p[:, i] = q.long()
+        if i + 1 < pin:
+            denom = Hinv[i, i]
+            factor = (Hinv[i, i+1:] / denom).to(work_dtype)         # [pin-i-1]
+            Wp[:, i+1:] -= e.unsqueeze(1) * factor.unsqueeze(0)
+            # schur downdate of the remaining inverse block
+            col = Hinv[i+1:, i:i+1]
+            row = Hinv[i:i+1, i+1:]
+            Hinv[i+1:, i+1:] -= (col @ row) / denom
+
+    # un-permute codes back to original coordinate positions
+    codes = torch.empty(C, pin, device=dev, dtype=torch.long)
+    codes.index_copy_(1, p, codes_p)
+    del Hp, Wp, Hinv, codes_p
     return codes
 
 
