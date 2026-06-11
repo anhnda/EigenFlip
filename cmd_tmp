@@ -20,5 +20,8 @@ Wrote ./quantized_models/eigenflip_3bit/rtn_eigenflip/ppl.json
 >>> [3/3] deleting ./quantized_models/eigenflip_3bit/rtn_eigenflip                           
 <<< done rtn+eigenflip                                                                       
                                
-SUMMARY  rtn_eigenflip_solve  wikitext2=125.4891 | c4=129.9068
+SUMMARY  rtn_eigenflip_solve  wikitext2=8.4383 | c4=10.9902
 Wrote ./quantized_models/eigenflip_3bit/rtn_eigenflip_solve/ppl.json
+>>> [2.5] preserving ppl.json
+>>> [3/3] deleting ./quantized_models/eigenflip_3bit/rtn_eigenflip_solve
+<<< done rtn+eigenflip_solve
