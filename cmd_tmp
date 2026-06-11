@@ -1,0 +1,24 @@
+[wikitext2] building test stream ...
+[wikitext2] perplexity = 11.0116                        
+
+[c4] building test stream ...
+  [c4] loading cached windows: ./dataset_cache/c4_testenc_e6c99db6fa6b.pt
+[c4] perplexity = 13.8248                               
+
+SUMMARY  rtn_none  wikitext2=11.0116 | c4=13.8
+
+SUMMARY  rtn_clc  wikitext2=9.4793 | c4=12.3363
+Wrote ./quantized_models/eigenflip_3bit/rtn_clc/ppl.json
+>>> [2.5] preserving ppl.json
+>>> [3/3] deleting ./quantized_models/eigenflip_3bit/rtn_clc
+<<< done rtn+clc
+  
+
+SUMMARY  rtn_eigenflip  wikitext2=9.4395 | c4=12.2012                                        
+Wrote ./quantized_models/eigenflip_3bit/rtn_eigenflip/ppl.json                               
+>>> [2.5] preserving ppl.json                                                                
+>>> [3/3] deleting ./quantized_models/eigenflip_3bit/rtn_eigenflip                           
+<<< done rtn+eigenflip                                                                       
+                               
+SUMMARY  rtn_eigenflip_solve  wikitext2=125.4891 | c4=129.9068
+Wrote ./quantized_models/eigenflip_3bit/rtn_eigenflip_solve/ppl.json
