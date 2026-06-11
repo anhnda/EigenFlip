@@ -122,9 +122,19 @@ def collect_and_encode_awq_style(
     layers = [(n, m) for n, m in model.named_modules()
               if isinstance(m, nn.Linear) and not (skip_lm_head and is_lm_head(n))]
     n_layers = len(layers)
+
+    # KEY SPEED FIX: mean-only (rtn/clc) costs O(d) per layer -> hook ALL layers
+    # at once and calibrate in ONE pass. Batching only matters for need_H (the
+    # d x d Gram is what costs RAM); with mean-only, batching just forces the
+    # model to be re-run from scratch for every batch (the slow bug). So when
+    # need_H is False we override the batch size to cover all layers.
+    if not need_H:
+        layer_batch_size = n_layers
+
     n_batches = (n_layers + layer_batch_size - 1) // layer_batch_size
-    print(f"  {n_layers} layers, {n_batches} batches of {layer_batch_size}, "
-          f"need_H={need_H}")
+    print(f"  {n_layers} layers, {n_batches} batch(es) of {layer_batch_size}, "
+          f"need_H={need_H}"
+          + ("  [mean-only: single pass]" if not need_H else ""))
 
     for bi in range(n_batches):
         s = bi * layer_batch_size
@@ -165,13 +175,15 @@ def collect_and_encode_awq_style(
         for h in handles:
             h.remove()
 
-        # encode each layer in the batch
-        for n, m in batch:
+        # encode each layer in the batch (THIS is the quantize step)
+        from tqdm import tqdm as _tq
+        for n, m in _tq(batch, desc="  quantize", leave=False):
             st = accs[n].to_stats(k, eps, keep_sigma, eig_device)
             callback(n, m, st)
             st.free_sigma()
             accs[n].free()
             del st
+        print(f"  quantized {len(batch)} layers")
         accs.clear()
         gc.collect()
         if torch.cuda.is_available():
