@@ -54,7 +54,7 @@ def _sequential_condition(Wf, scale, zp, lo, hi, Hmat, order, work_dtype):
         si = scale[:, i]; zpi = zp[:, i]
         q = torch.clamp(torch.round(W[:, i] / si + zpi), lo, hi)
         w_dq = (q - zpi) * si
-        e = w_dq - W[:, i]
+        e = W[:, i] - w_dq          # GPTQ sign: target - dequant
         codes[:, i] = q.long()
         Rrest = R[1:]
         if not Rrest:

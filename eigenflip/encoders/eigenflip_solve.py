@@ -111,7 +111,7 @@ class EigenFlipSolve:
             # round in quantized domain
             q = _round_clamp(w_tilde / si + zpi, lo, hi) # [C]
             w_dq = (q - zpi) * si
-            e = w_dq - w_tilde                           # [C] quant error (signed)
+            e = w_tilde - w_dq                           # [C] error: target - dequant (GPTQ sign)
             codes[:, i] = q.to(codes.dtype)
 
             # H~^{-1}_{ii} = Dinv_i (1 - Dinv_i V_i M^{-1} V_i^T)
