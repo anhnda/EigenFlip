@@ -8,8 +8,8 @@ LOG_FILE="$LOG_DIR/eigenflip_3bit_$(date +%Y%m%d_%H%M%S).log"
 exec > >(tee -a "$LOG_FILE") 2>&1
 echo "=== run started $(date) ==="
 echo "log: $LOG_FILE"
-#none clc eigenflip
-for ENC in eigenflip_solve gptq; do
+#none clc eigenflipeigenflip_solve
+for ENC in gptq; do
   CELL_DIR="$OUTPUT_DIR/rtn_${ENC}"
 
   # layer-batch-size per encoder: Gram-heavy ones need smaller batches / cpu eigh
