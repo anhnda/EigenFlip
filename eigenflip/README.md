@@ -271,3 +271,24 @@ Non-probe layers are re-collected (split A only) in PASS 2 to avoid holding all
 Sigmas at once. This trades one extra calibration pass for bounded memory; if
 RAM is ample, raise --probe-frac to 1.0 so all layers are cached and PASS 2
 needs no re-collection.
+
+## SPEED FIX (replaces slow per-batch collection)
+
+The old per-batch collector re-ran the WHOLE model for every group of 16 layers
+(n_batches full-model passes). The new `statistics/sequential.py` is GPTQ-style
+block-paged: ONE pass total, block-by-block, with `inps,outs=outs,inps`.
+
+Collect only what the encoder needs (conditional streaming):
+  rtn -> nothing | clc -> mean E[X] only (O(d)) | eigenflip/solve/gptq/shr -> H
+
+Run ONE cell per process:
+```bash
+PYTHONPATH=. python -m eigenflip.run_fast \
+  --model-path /path/to/Meta-Llama-3.1-8B \
+  --base rtn --encoder eigenflip_solve --k 16 \
+  --bits 3 --group-size 128 \
+  --calib-dataset c4 --nsamples 128 --seqlen 2048 \
+  --output-dir ./quantized_models/ll31_3bit
+```
+Encoders: none clc eigenflip eigenflip_solve gptq shr_gptq_cov shr_gptq_2m
+Heavy layers: add --eig-on-cpu to move eigh off GPU.
