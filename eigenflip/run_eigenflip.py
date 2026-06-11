@@ -123,7 +123,7 @@ def main():
         calib = get_wikitext2_calibration_data(
             tokenizer, n_samples=args.n_calib, seqlen=args.seqlen,
             seed=args.seed, cache_dir=args.cache_dir)
-
+    print(f"Calibration samples: {len(calib)} from {args.calib_dataset}")
     # AWQ scales (path A) if AWQ base requested
     awq_scales = {}
     if "awq" in args.bases:
