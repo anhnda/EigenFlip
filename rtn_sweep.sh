@@ -26,7 +26,7 @@ for ENC in none clc eigenflip eigenflip_solve gptq; do
         --model-path "$MODEL_PATH" \
         --output-dir "$OUTPUT_DIR" \
         --bits 3 --group-size 128 --k 16 \
-        --bases rtn --encoder "$ENC" \
+        --base rtn --encoder "$ENC" \
         --calib-dataset c4 --n-calib 128 --seqlen 2048 \
         --eig-backend auto --vram-fraction 0.4 \
         --layer-batch-size 16
