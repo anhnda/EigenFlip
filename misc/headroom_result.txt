@@ -1,0 +1,33 @@
+# Direction 1 — Headroom Results Summary
+
+**Setup.** Mistral-7B-v0.3, 12 sampled layers, 32 rows/layer, blocks of d'∈{16,24} selected by top-|μ|, C4 calibration. Exact CVP solved per block (2^{d'} bracketing-level enumeration); compared against RTN and CLC (rung 1, knee=−10/max_flip=1.0). Distortion metric: e^⊤H_II e.
+
+## Headroom curve (recoverable distortion vs rung)
+
+| rung | encoder | remaining distortion above exact (% of RTN) |
+|------|---------|---------------------------------------------|
+| 0 | RTN | ~75% (the full gap) |
+| 1 | CLC | ~14–17% |
+| — | exact CVP | 0% (floor) |
+
+## The numbers
+
+**3-bit:** RTN gap 73.3% (d'=16) → 76.3% (d'=24). CLC recovers ~79–81% of the gap → CLC residual ~14–17% of RTN. Attribution: rank-one ~84%, off-diagonal ~36%.
+
+**4-bit:** RTN gap 75.6% → 78.9%. CLC recovers ~81–84% → residual ~12–15%. Attribution: rank-one ~84%, off-diagonal ~32%.
+
+## Three findings
+
+1. **The gap is large — Direction 1's hypothesis confirmed.** RTN sits ~75% above the exact block optimum. The encoding stage leaves substantial distortion recoverable; the research program continues.
+
+2. **Relative headroom is scale-invariant; absolute headroom concentrates at low bit-width.** The relative gap holds ~75% across 3- and 4-bit, but the *absolute* gap drops ~4× per bit (3-bit gap≈2.3e-3, 4-bit≈5.8e-4 — the s² factor). Both numerator and denominator shrink together, so the ratio is flat while the real recoverable distortion is 4× larger at 3-bit. This refines the doc's §2.2 "wrong regime" claim: it's true in *absolute* terms, false if read as the relative gap shrinking.
+
+3. **CLC (rung 1) closes ~80% of the gap; the ~15% leftover is off-diagonal-dominated.** CLC kills the rank-one term but structurally can't touch coupling, so the residual headroom lives in the off-diagonal Σ term (~32–36% of the gap). That is precisely the rung-2 prize and writes Direction 2's motivation directly.
+
+## Caveats before paper
+
+- 12 sampled layers, one model — needs LLaMA-3.1-8B + per-layer-type stratification (attn vs MLP likely split differently on off-diagonal share).
+- Heavy-tailed distribution: gap_median ≈ 14× below gap_mean, so the pooled ~75% is energy-weighted toward a few high-distortion blocks. Report both; a per-block gap histogram shows the concentration.
+- d' robustness confirmed 16→24 (numbers barely move); one d'=32 B&B point would confirm the curve flattens.
+
+**Headline:** ~75% of RTN distortion is recoverable, CLC captures ~80% of it, ~15% remains for higher rungs — and that remainder is the coupling term, not rank-one.
