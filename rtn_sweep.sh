@@ -22,7 +22,7 @@ for ENC in none clc eigenflip eigenflip_solve gptq; do
     echo "############################################################"
 
     echo ">>> [1/3] quantizing rtn+$ENC"
-    PYTHONPATH=. python eigenflip/run_eigenflip.py \
+    PYTHONPATH=. python eigenflip/run_fast.py \
         --model-path "$MODEL_PATH" \
         --output-dir "$OUTPUT_DIR" \
         --bits 3 --group-size 128 --k 16 \
