@@ -36,7 +36,7 @@ import gc
 import torch
 import torch.nn as nn
 from transformers import AutoModelForCausalLM, AutoTokenizer
-
+from tqdm import tqdm
 from eigenflip.statistics.collect import StatsCollector, is_lm_head
 from eigenflip.pipeline.runner import (default_registry, make_base_state,
                                        quantize_layer_variants)
@@ -175,7 +175,7 @@ def main():
         collector.keep_sigma_for = set(names) if needs_sigma else set()
         stats_map = collector.collect_batch(batch, calib, args.n_calib)
 
-        for name, module in batch:
+        for name, module in tqdm(batch, desc="Quantizing layers in batch"):
             W = module.weight.data
             stats = stats_map[name]
             variants = quantize_layer_variants(
