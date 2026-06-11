@@ -27,8 +27,7 @@ for ENC in none clc eigenflip eigenflip_solve gptq; do
         --output-dir "$OUTPUT_DIR" \
         --bits 3 --group-size 128 --k 16 \
         --base rtn --encoder "$ENC" \
-        --calib-dataset c4 --n-calib 128 --seqlen 2048 \
-        --eig-backend auto --vram-fraction 0.4 \
+        --calib-dataset c4 --nsamples 128 --seqlen 2048 \
         --layer-batch-size 16
 
     if [ ! -d "$CELL_DIR" ]; then
