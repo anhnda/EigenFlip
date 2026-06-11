@@ -112,6 +112,7 @@ def main():
     model.eval()
 
     # calibration: tensors preserve full seqlen for honest n/d
+    print(f"Loading calibration data from {args.calib_dataset} ...")
     if get_c4_calibration_data is None:
         raise RuntimeError("calibration_utils.py not importable; put it on PYTHONPATH")
     if args.calib_dataset == "c4":
