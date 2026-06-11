@@ -8,7 +8,7 @@ mkdir -p "$LOG_DIR"
 LOG_FILE="$LOG_DIR/eigenflip_3bit_$(date +%Y%m%d_%H%M%S).log"
 
 # everything below goes to console + log file
-exec > >(tee -a "$LOG_FILE") 2>&1
+# exec > >(tee -a "$LOG_FILE") 2>&1
 
 echo "=== run started $(date) ==="
 echo "log: $LOG_FILE"
